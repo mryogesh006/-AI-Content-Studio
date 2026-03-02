@@ -1,37 +1,74 @@
-// API Setup
-const API_KEY = "AIzaSyAVS6BYRvmM23ShiNGgdwZLXFZs-vvQadI";
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent?key=${API_KEY}`;
 
-// Button click → Generate
-document.getElementById("generateBtn").addEventListener("click", async function () {
+const btn = document.getElementById("generateBtn");
+const input = document.getElementById("userInput");
+const output = document.getElementById("output");
+const loader = document.getElementById("loader");
+const feature = document.getElementById("feature");
 
-    let text = document.getElementById("userInput").value.trim();
-    let feature = document.getElementById("feature").value;
-    let output = document.getElementById("output");
+const prompts = {
+    ask: "Answer clearly and concisely.\n\nQuestion: ",
+    summarize: "Summarize this in bullet points:\n\n",
+    ideas: "Generate creative ideas about:\n\n",
+    define: "Explain in simple words with an example:\n\n"
+};
 
-    if (!text) { output.innerText = "⚠️ Please enter text."; return; }
+async function callAPI(text) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
-    // Loading
-    this.disabled = true;
-    this.textContent = "⏳ Generating...";
-    document.getElementById("loader").style.display = "block";
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text }] }]
+        })
+    });
 
-    try {
-        let res = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ parts: [{ text: feature + ": " + text }] }] })
-        });
+    const data = await res.json();
 
-        let data = await res.json();
-        output.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, "<br>");
+    // Handle errors
+    if (data.error) return "❌ " + data.error.message;
+    if (!data.candidates?.[0]) return "⚠️ No response from API.";
 
-    } catch (e) {
-        output.innerText = "❌ Error: " + e.message;
+    return data.candidates[0].content.parts[0].text;
+}
+
+function formatText(text) {
+    return text
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.+?)\*/g, "<em>$1</em>")
+        .replace(/`(.+?)`/g, "<code>$1</code>")
+        .replace(/^### (.+)$/gm, "<h4>$1</h4>")
+        .replace(/^## (.+)$/gm, "<h3>$1</h3>")
+        .replace(/^- (.+)$/gm, "<li>$1</li>")
+        .replace(/^\* (.+)$/gm, "<li>$1</li>")
+        .replace(/^\d+\. (.+)$/gm, "<li>$1</li>")
+        .replace(/\n/g, "<br>");
+}
+
+btn.addEventListener("click", async () => {
+    const text = input.value.trim();
+
+    if (!text) {
+        output.innerHTML = "<span class='warning'>⚠️ Please enter some text.</span>";
+        return;
     }
 
-    // Done
-    document.getElementById("loader").style.display = "none";
-    this.disabled = false;
-    this.textContent = "🚀 Generate";
+    // Show loading
+    btn.disabled = true;
+    btn.textContent = "⏳ Generating...";
+    loader.style.display = "block";
+    output.innerHTML = "";
+
+    const prompt = (prompts[feature.value] || "") + text;
+    const result = await callAPI(prompt);
+
+    loader.style.display = "none";
+    btn.disabled = false;
+    btn.textContent = "🚀 Generate";
+    output.innerHTML = formatText(result);
+});
+
+input.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.key === "Enter") btn.click();
 });
