@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Content Generator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+    <h1>✨ AI Content Studio</h1>
+    <p class="subtitle">Powered by Google Gemini</p>
+
+    <div class="controls">
+        <select id="feature">
+            <option value="ask">💬 Ask Me Anything</option>
+            <option value="summarize">📝 Quick Summarizer</option>
+            <option value="ideas">💡 Idea Spark</option>
+            <option value="define">📘 Definition Finder</option>
+        </select>
+
+        <textarea id="userInput" placeholder="Type your text here... (Ctrl+Enter to generate)"></textarea>
+
+        <button id="generateBtn">🚀 Generate</button>
+    </div>
+
+    <div class="result-box">
+        <div class="loader" id="loader"></div>
+        <div id="output"></div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
